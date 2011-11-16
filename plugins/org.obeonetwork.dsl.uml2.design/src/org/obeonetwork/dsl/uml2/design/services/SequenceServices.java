@@ -632,10 +632,26 @@ public class SequenceServices {
 		// Get fragments
 		Interaction interaction = (Interaction)message.eContainer();
 		List<InteractionFragment> fragments = interaction.getFragments();
-		
-		// Delete start and finish message
-		fragments.remove(message.getReceiveEvent());
+
+		// Delete start and finish message and if an execution is associated to the message remove also the
+		// execution
+		InteractionFragment receiveEvent = (InteractionFragment)message.getReceiveEvent();
+		// If message is a synchronous message delete also the reply message
+		if (MessageSort.SYNCH_CALL_LITERAL.equals(message.getMessageSort())) {
+			if (getExecution(receiveEvent) != null
+					&& getExecution(receiveEvent).getFinish() instanceof MessageOccurrenceSpecification)
+				delete(((MessageOccurrenceSpecification)getExecution(receiveEvent).getFinish()).getMessage());
+		}
+
+		if (getExecution(receiveEvent) != null)
+			delete(getExecution(receiveEvent));
+		fragments.remove(receiveEvent);
+
+		InteractionFragment sendEvent = (InteractionFragment)message.getSendEvent();
+		if (getExecution(sendEvent) != null)
+			delete(getExecution(sendEvent));
 		fragments.remove(message.getSendEvent());
+
 		// Delete message
 		interaction.getMessages().remove(message);
 	}
