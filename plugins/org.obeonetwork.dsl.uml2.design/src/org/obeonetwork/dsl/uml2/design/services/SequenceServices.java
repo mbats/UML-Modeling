@@ -600,6 +600,12 @@ public class SequenceServices {
 				finishingEndPredecessor);
 	}
 
+	/**
+	 * Delete execution.
+	 * 
+	 * @param execution
+	 *            Execution to delete
+	 */
 	public void delete(BehaviorExecutionSpecification execution) {
 		// Get fragments
 		Interaction interaction = (Interaction)execution.eContainer();
@@ -614,6 +620,24 @@ public class SequenceServices {
 			fragments.remove(execution.getFinish());
 		// Delete execution
 		fragments.remove(execution);
+	}
+
+	/**
+	 * Delete message.
+	 * 
+	 * @param message
+	 *            Message to delete
+	 */
+	public void delete(Message message) {
+		// Get fragments
+		Interaction interaction = (Interaction)message.eContainer();
+		List<InteractionFragment> fragments = interaction.getFragments();
+		
+		// Delete start and finish message
+		fragments.remove(message.getReceiveEvent());
+		fragments.remove(message.getSendEvent());
+		// Delete message
+		interaction.getMessages().remove(message);
 	}
 
 	private Lifeline getLifeline(Element fragment) {
