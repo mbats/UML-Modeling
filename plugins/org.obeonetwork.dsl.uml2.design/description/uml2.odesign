@@ -2428,7 +2428,7 @@
           <ownedTools xsi:type="tool:ToolGroup" name="GRP_Executions" label="Executions">
             <tools xsi:type="tool_1:ExecutionCreationTool" name="CR_TypedExecution" label="Execution Import" nodeMappings="//@ownedViewpoints[name='UML%20Behavioral%20Modeling']/@ownedRepresentations[name='Sequence%20Diagram']/@defaultLayer/@nodeMappings[name='SD_Lifeline%20Instance%20Role']/@borderedNodeMappings[name='SD_Lifeline%20Execution']/@borderedNodeMappings[name='SD_Execution']" iconPath="/org.eclipse.uml2.uml.edit/icons/full/obj16/ActionExecutionSpecification.gif">
               <variable name="container">
-                <subVariables xsi:type="tool:SelectModelElementVariable" name="operation" candidatesExpression="&lt;%represents.type.ownedOperation%>"/>
+                <subVariables xsi:type="tool:SelectModelElementVariable" name="operation" candidatesExpression="&lt;%represents.type.ownedOperation+represents.type.interfaceRealization.contract.ownedOperation%>"/>
               </variable>
               <viewVariable name="containerView"/>
               <initialOperation>
