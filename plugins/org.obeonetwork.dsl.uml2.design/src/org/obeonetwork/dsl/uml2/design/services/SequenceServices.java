@@ -513,8 +513,6 @@ public class SequenceServices {
 		EList<InteractionFragment> fragments = interaction.getFragments();
 
 		// Ordered fragments
-		// Start reply message must be set after target end execution
-		// End reply message must be set before end execution
 		fragments.add(senderEventMessage);
 		// If message starts from an execution, add the message start after the execution specification
 		if (startingEndPredecessor instanceof ExecutionOccurrenceSpecification
@@ -526,7 +524,16 @@ public class SequenceServices {
 			// (message)
 			fragments.move(fragments.indexOf(startingEndPredecessor) + 1, senderEventMessage);
 		interaction.getFragments().add(receiverEventMessage);
-		fragments.move(fragments.indexOf(senderEventMessage) + 1, receiverEventMessage);
+
+		// If message starts from an execution and is not typed, add the message end after the execution end
+		if (operation == null
+				&& startingEndPredecessor instanceof ExecutionOccurrenceSpecification
+				&& startingEndPredecessor.equals(((ExecutionOccurrenceSpecification)startingEndPredecessor)
+						.getExecution().getStart()))
+			fragments.move(fragments.indexOf(((ExecutionOccurrenceSpecification)startingEndPredecessor)
+					.getExecution().getFinish()) + 1, receiverEventMessage);
+		else
+			fragments.move(fragments.indexOf(senderEventMessage) + 1, receiverEventMessage);
 
 		if (operation != null) {
 			// Create behavior
