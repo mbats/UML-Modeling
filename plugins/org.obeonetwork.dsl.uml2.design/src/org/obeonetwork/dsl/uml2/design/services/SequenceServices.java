@@ -395,7 +395,16 @@ public class SequenceServices {
 			// (message)
 			fragments.move(fragments.indexOf(startingEndPredecessor) + 1, senderEventMessage);
 		interaction.getFragments().add(receiverEventMessage);
-		fragments.move(fragments.indexOf(senderEventMessage) + 1, receiverEventMessage);
+
+		// If message starts from an execution and is not typed, add the message end after the execution end
+		if (operation == null
+				&& startingEndPredecessor instanceof ExecutionOccurrenceSpecification
+				&& startingEndPredecessor.equals(((ExecutionOccurrenceSpecification)startingEndPredecessor)
+						.getExecution().getStart()))
+			fragments.move(fragments.indexOf(((ExecutionOccurrenceSpecification)startingEndPredecessor)
+					.getExecution().getFinish()) + 1, receiverEventMessage);
+		else
+			fragments.move(fragments.indexOf(senderEventMessage) + 1, receiverEventMessage);
 
 		if (operation != null) {
 			// Create behavior
