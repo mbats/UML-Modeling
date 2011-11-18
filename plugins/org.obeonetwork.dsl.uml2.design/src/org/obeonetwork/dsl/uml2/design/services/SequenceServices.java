@@ -352,11 +352,12 @@ public class SequenceServices {
 		UMLFactory factory = UMLFactory.eINSTANCE;
 		Message message = factory.createMessage();
 		String operationName;
-		if (operation == null) {
+		if (operation == null && targetFragment instanceof Lifeline) {
 			operationName = "Message_" + interaction.getMessages().size();
-		} else {
+		} else if (targetFragment instanceof BehaviorExecutionSpecification) {
+			operationName = targetFragment.getName();
+		} else
 			operationName = operation.getName();
-		}
 
 		message.setName(operationName.toString());
 		message.setMessageSort(MessageSort.ASYNCH_CALL_LITERAL);
@@ -385,10 +386,7 @@ public class SequenceServices {
 		// Ordered fragments
 		fragments.add(senderEventMessage);
 		// If message starts from an execution, add the message start after the execution specification
-		if (startingEndPredecessor instanceof OccurrenceSpecification
-				&& getExecution((OccurrenceSpecification)startingEndPredecessor) != null
-				&& startingEndPredecessor
-						.equals(getExecution((OccurrenceSpecification)startingEndPredecessor).getStart()))
+		if (sourceFragment instanceof BehaviorExecutionSpecification)
 			fragments.move(fragments.indexOf(startingEndPredecessor) + 2, senderEventMessage);
 		else
 			// Message starts from a lifeline, add the message start after the last starting predecessor
@@ -397,14 +395,19 @@ public class SequenceServices {
 		interaction.getFragments().add(receiverEventMessage);
 
 		// If message starts from an execution and is not typed, add the message end after the execution end
-		if (operation == null
-				&& startingEndPredecessor instanceof ExecutionOccurrenceSpecification
-				&& startingEndPredecessor.equals(((ExecutionOccurrenceSpecification)startingEndPredecessor)
-						.getExecution().getStart()))
-			fragments.move(fragments.indexOf(((ExecutionOccurrenceSpecification)startingEndPredecessor)
-					.getExecution().getFinish()) + 1, receiverEventMessage);
+		if (operation == null && sourceFragment instanceof BehaviorExecutionSpecification)
+			fragments.move(fragments.indexOf(((ExecutionSpecification)sourceFragment).getFinish()) + 1,
+					receiverEventMessage);
 		else
 			fragments.move(fragments.indexOf(senderEventMessage) + 1, receiverEventMessage);
+
+		if (targetFragment instanceof BehaviorExecutionSpecification) {
+			// Set the message receiver as start for existing execution and delete execution start
+			fragments.move(fragments.indexOf(((BehaviorExecutionSpecification)targetFragment).getStart()),
+					receiverEventMessage);
+			fragments.remove(((BehaviorExecutionSpecification)targetFragment).getStart());
+			((BehaviorExecutionSpecification)targetFragment).setStart(receiverEventMessage);
+		}
 
 		if (operation != null) {
 			// Create behavior
@@ -432,13 +435,10 @@ public class SequenceServices {
 
 			interaction.getFragments().add(endExec);
 			// If message starts from an execution, add the message end after the parent execution end
-			if (startingEndPredecessor instanceof OccurrenceSpecification
-					&& getExecution((OccurrenceSpecification)startingEndPredecessor) != null
-					&& startingEndPredecessor.equals(getExecution(
-							(OccurrenceSpecification)startingEndPredecessor).getStart()))
+			if (sourceFragment instanceof BehaviorExecutionSpecification)
 				fragments.move(
-						fragments.indexOf(getExecution((OccurrenceSpecification)startingEndPredecessor)
-								.getFinish()) + 1, endExec);
+						fragments.indexOf(((BehaviorExecutionSpecification)sourceFragment).getFinish()) + 1,
+						endExec);
 			else
 				fragments.move(fragments.indexOf(execution) + 1, endExec);
 		}
@@ -492,9 +492,12 @@ public class SequenceServices {
 		// Create message
 		Message message = factory.createMessage();
 		StringBuffer operationName;
-		if (operation == null)
+		if (operation == null && targetFragment instanceof Lifeline)
 			operationName = new StringBuffer("Message_").append(interaction.getMessages().size());
-		else
+		else if (targetFragment instanceof BehaviorExecutionSpecification) {
+			// If message finishes on an execution, reference the operation associated to the execution
+			operationName = new StringBuffer(targetFragment.getName());
+		} else
 			operationName = new StringBuffer(operation.getName());
 
 		message.setName(operationName.toString());
@@ -524,10 +527,8 @@ public class SequenceServices {
 		// Ordered fragments
 		fragments.add(senderEventMessage);
 		// If message starts from an execution, add the message start after the execution specification
-		if (startingEndPredecessor instanceof ExecutionOccurrenceSpecification
-				&& startingEndPredecessor.equals(((ExecutionOccurrenceSpecification)startingEndPredecessor)
-						.getExecution().getStart()))
-			fragments.move(fragments.indexOf(startingEndPredecessor) + 2, senderEventMessage);
+		if (sourceFragment instanceof BehaviorExecutionSpecification)
+			fragments.move(fragments.indexOf(sourceFragment) + 1, senderEventMessage);
 		else
 			// Message starts from a lifeline, add the message start after the last starting predecessor
 			// (message)
@@ -535,61 +536,80 @@ public class SequenceServices {
 		interaction.getFragments().add(receiverEventMessage);
 
 		// If message starts from an execution and is not typed, add the message end after the execution end
-		if (operation == null
-				&& startingEndPredecessor instanceof ExecutionOccurrenceSpecification
-				&& startingEndPredecessor.equals(((ExecutionOccurrenceSpecification)startingEndPredecessor)
-						.getExecution().getStart()))
-			fragments.move(fragments.indexOf(((ExecutionOccurrenceSpecification)startingEndPredecessor)
-					.getExecution().getFinish()) + 1, receiverEventMessage);
-		else
+		if (operation == null && targetFragment instanceof Lifeline
+				&& sourceFragment instanceof BehaviorExecutionSpecification)
+			fragments.move(fragments.indexOf(((ExecutionSpecification)sourceFragment).getFinish()) + 1,
+					receiverEventMessage);
+		else if (targetFragment instanceof BehaviorExecutionSpecification) {
+			// Delete execution start and set message receive as execution start
+			fragments.move(fragments.indexOf(((BehaviorExecutionSpecification)targetFragment).getStart()),
+					receiverEventMessage);
+			fragments.remove(((BehaviorExecutionSpecification)targetFragment).getStart());
+			((BehaviorExecutionSpecification)targetFragment).setStart(senderEventMessage);
+		} else
 			fragments.move(fragments.indexOf(senderEventMessage) + 1, receiverEventMessage);
 
-		if (operation != null) {
-			// Create behavior
-			OpaqueBehavior behavior = factory.createOpaqueBehavior();
-			behavior.setName(operationName.toString());
+		// Create behavior
+		OpaqueBehavior behavior = factory.createOpaqueBehavior();
+		behavior.setName(operationName.toString());
+		if (operation != null || targetFragment instanceof ExecutionSpecification)
 			behavior.setSpecification(operation);
+		interaction.getOwnedBehaviors().add(behavior);
 
-			interaction.getOwnedBehaviors().add(behavior);
-			BehaviorExecutionSpecification execution = factory.createBehaviorExecutionSpecification();
+		BehaviorExecutionSpecification execution = null;
+		if (operation != null) {
+			execution = factory.createBehaviorExecutionSpecification();
 			execution.setName(operationName.toString());
 			execution.getCovereds().add(target);
 			execution.setBehavior(behavior);
 			execution.setStart(receiverEventMessage);
+		} else if (targetFragment instanceof BehaviorExecutionSpecification) {
+			execution = (BehaviorExecutionSpecification)targetFragment;
+		}
 
-			// Create reply message
-			Message replyMessage = factory.createMessage();
-			StringBuffer replyName = new StringBuffer(operationName).append("_reply");
-			replyMessage.setName(replyName.toString());
-			replyMessage.setMessageSort(MessageSort.REPLY_LITERAL);
-			interaction.getMessages().add(replyMessage);
+		// Create reply message
+		Message replyMessage = factory.createMessage();
+		StringBuffer replyName = new StringBuffer(operationName).append("_reply");
+		replyMessage.setName(replyName.toString());
+		replyMessage.setMessageSort(MessageSort.REPLY_LITERAL);
+		interaction.getMessages().add(replyMessage);
 
-			// Create reply message send event
-			MessageOccurrenceSpecification senderEventReplyMessage = factory
-					.createMessageOccurrenceSpecification();
-			StringBuffer senderReplyEventName = new StringBuffer(replyName).append("_sender");
-			senderEventReplyMessage.setName(senderReplyEventName.toString());
-			senderEventReplyMessage.getCovereds().add(target);
-			senderEventReplyMessage.setMessage(replyMessage);
+		// Create reply message send event
+		MessageOccurrenceSpecification senderEventReplyMessage = factory
+				.createMessageOccurrenceSpecification();
+		StringBuffer senderReplyEventName = new StringBuffer(replyName).append("_sender");
+		senderEventReplyMessage.setName(senderReplyEventName.toString());
+		senderEventReplyMessage.getCovereds().add(target);
+		senderEventReplyMessage.setMessage(replyMessage);
+		if (execution != null && execution.getFinish() != null) {
+			fragments.remove(execution.getFinish());
+		}
+
+		// Create reply message receive event
+		MessageOccurrenceSpecification receiverEventReplyMessage = factory
+				.createMessageOccurrenceSpecification();
+		StringBuffer receiverReplyEventName = new StringBuffer(replyName).append("_receiver");
+		receiverEventReplyMessage.setName(receiverReplyEventName.toString());
+		receiverEventReplyMessage.getCovereds().add(source);
+		receiverEventReplyMessage.setMessage(replyMessage);
+
+		replyMessage.setSendEvent(senderEventReplyMessage);
+		replyMessage.setReceiveEvent(receiverEventReplyMessage);
+
+		if (execution != null) {
 			execution.setFinish(senderEventReplyMessage);
-
-			// Create reply message receive event
-			MessageOccurrenceSpecification receiverEventReplyMessage = factory
-					.createMessageOccurrenceSpecification();
-			StringBuffer receiverReplyEventName = new StringBuffer(replyName).append("_receiver");
-			receiverEventReplyMessage.setName(receiverReplyEventName.toString());
-			receiverEventReplyMessage.getCovereds().add(source);
-			receiverEventReplyMessage.setMessage(replyMessage);
-
-			replyMessage.setSendEvent(senderEventReplyMessage);
-			replyMessage.setReceiveEvent(receiverEventReplyMessage);
-
 			interaction.getFragments().add(execution);
 			fragments.move(fragments.indexOf(receiverEventMessage) + 1, execution);
 			fragments.add(senderEventReplyMessage);
 			fragments.move(fragments.indexOf(execution) + 1, senderEventReplyMessage);
 			fragments.add(receiverEventReplyMessage);
 			fragments.move(fragments.indexOf(senderEventReplyMessage) + 1, receiverEventReplyMessage);
+		} else {
+			fragments.add(senderEventReplyMessage);
+			fragments.move(fragments.indexOf(receiverEventMessage) + 1, senderEventReplyMessage);
+			fragments.add(receiverEventReplyMessage);
+			fragments.move(fragments.indexOf(senderEventReplyMessage) + 1, receiverEventReplyMessage);
+
 		}
 	}
 
