@@ -394,9 +394,7 @@ public class SequenceServices {
 		fragments.add(senderEventMessage);
 		// If message starts from an execution, add the message start after the execution specification
 		if (sourceFragment instanceof BehaviorExecutionSpecification)
-			fragments.move(
-					fragments.indexOf(((BehaviorExecutionSpecification)sourceFragment).getFinish()) + 1,
-					senderEventMessage);
+			fragments.move(fragments.indexOf(sourceFragment) + 1, senderEventMessage);
 		else
 			// Message starts from a lifeline, add the message start after the last starting predecessor
 			// (message)
@@ -417,15 +415,15 @@ public class SequenceServices {
 		} else
 			fragments.move(fragments.indexOf(senderEventMessage) + 1, receiverEventMessage);
 
-		// Create behavior
-		OpaqueBehavior behavior = factory.createOpaqueBehavior();
-		behavior.setName(operationName.toString());
-		if (operation != null || targetFragment instanceof ExecutionSpecification)
-			behavior.setSpecification(operation);
-		interaction.getOwnedBehaviors().add(behavior);
-
 		BehaviorExecutionSpecification execution = null;
 		if (operation != null) {
+			// Create behavior
+			OpaqueBehavior behavior = factory.createOpaqueBehavior();
+			behavior.setName(operationName.toString());
+			if (operation != null || targetFragment instanceof ExecutionSpecification)
+				behavior.setSpecification(operation);
+			interaction.getOwnedBehaviors().add(behavior);
+
 			execution = factory.createBehaviorExecutionSpecification();
 			execution.setName(operationName.toString());
 			execution.getCovereds().add(target);
