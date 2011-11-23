@@ -645,7 +645,9 @@ public class SequenceServices {
 			splitSourceExec.setFinish(endSplitSourceExec);
 
 			// Move execution source end after the created execution
-			fragments.move(fragments.indexOf(execution) + 1, endSourceExec);
+			if (execution != null)
+				fragments.move(fragments.indexOf(execution) + 1, endSourceExec);
+
 			fragments.add(splitSourceExec);
 			fragments.move(fragments.indexOf(receiverEventReplyMessage) + 1, splitSourceExec);
 			fragments.add(endSplitSourceExec);
