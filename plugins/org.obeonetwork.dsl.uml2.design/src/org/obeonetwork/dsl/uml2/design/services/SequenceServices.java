@@ -321,8 +321,6 @@ public class SequenceServices {
 	 *            Interaction
 	 * @param fragment
 	 *            Lifeline or parent execution
-	 * @param operation
-	 *            Operation associated to execution
 	 * @param startingEndPredecessor
 	 *            Starting end predecessor
 	 */
@@ -411,7 +409,7 @@ public class SequenceServices {
 			fragments.move(fragments.indexOf(((BehaviorExecutionSpecification)targetFragment).getStart()),
 					receiverEventMessage);
 			fragments.remove(((BehaviorExecutionSpecification)targetFragment).getStart());
-			((BehaviorExecutionSpecification)targetFragment).setStart(senderEventMessage);
+			((BehaviorExecutionSpecification)targetFragment).setStart(receiverEventMessage);
 		} else
 			fragments.move(fragments.indexOf(senderEventMessage) + 1, receiverEventMessage);
 
@@ -432,6 +430,9 @@ public class SequenceServices {
 		} else if (targetFragment instanceof BehaviorExecutionSpecification) {
 			execution = (BehaviorExecutionSpecification)targetFragment;
 		}
+
+		if (execution == null)
+			return;
 
 		// Create execution end
 		ExecutionOccurrenceSpecification endExec = factory.createExecutionOccurrenceSpecification();
@@ -558,19 +559,19 @@ public class SequenceServices {
 			fragments.move(fragments.indexOf(((BehaviorExecutionSpecification)targetFragment).getStart()),
 					receiverEventMessage);
 			fragments.remove(((BehaviorExecutionSpecification)targetFragment).getStart());
-			((BehaviorExecutionSpecification)targetFragment).setStart(senderEventMessage);
+			((BehaviorExecutionSpecification)targetFragment).setStart(receiverEventMessage);
 		} else
 			fragments.move(fragments.indexOf(senderEventMessage) + 1, receiverEventMessage);
 
 		// Create behavior
-		OpaqueBehavior behavior = factory.createOpaqueBehavior();
-		behavior.setName(operationName.toString());
-		if (operation != null || targetFragment instanceof ExecutionSpecification)
-			behavior.setSpecification(operation);
-		interaction.getOwnedBehaviors().add(behavior);
-
 		BehaviorExecutionSpecification execution = null;
 		if (operation != null) {
+			OpaqueBehavior behavior = factory.createOpaqueBehavior();
+			behavior.setName(operationName.toString());
+			if (operation != null || targetFragment instanceof ExecutionSpecification)
+				behavior.setSpecification(operation);
+			interaction.getOwnedBehaviors().add(behavior);
+
 			execution = factory.createBehaviorExecutionSpecification();
 			execution.setName(operationName.toString());
 			execution.getCovereds().add(target);
