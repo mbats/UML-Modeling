@@ -27,6 +27,7 @@ import org.eclipse.uml2.uml.ExecutionOccurrenceSpecification;
 import org.eclipse.uml2.uml.ExecutionSpecification;
 import org.eclipse.uml2.uml.Interaction;
 import org.eclipse.uml2.uml.InteractionFragment;
+import org.eclipse.uml2.uml.InterfaceRealization;
 import org.eclipse.uml2.uml.Lifeline;
 import org.eclipse.uml2.uml.Message;
 import org.eclipse.uml2.uml.MessageOccurrenceSpecification;
@@ -450,8 +451,7 @@ public class SequenceServices {
 		fragments.add(endExec);
 		// If message starts from an execution, add the message end after the parent execution end
 		if (sourceFragment instanceof BehaviorExecutionSpecification)
-			fragments.move(
-					fragments.indexOf(((BehaviorExecutionSpecification)sourceFragment).getFinish()),
+			fragments.move(fragments.indexOf(((BehaviorExecutionSpecification)sourceFragment).getFinish()),
 					endExec);
 		else
 			fragments.move(fragments.indexOf(execution) + 1, endExec);
@@ -745,5 +745,41 @@ public class SequenceServices {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Get operations associated to a lifeline or an execution. To get all the available operations, we should
+	 * get the one defined directly under the class and those defined in realized interface.
+	 * 
+	 * @param target
+	 *            Lifeline or execution
+	 * @return All operations available for the lifeline or execution
+	 */
+	public List<Operation> getOperations(EObject target) {
+		List<Element> elements = null;
+		if (target instanceof Lifeline) {
+			elements = ((Lifeline)target).getRepresents().getType().getOwnedElements();
+		} else if (target instanceof ExecutionSpecification) {
+			elements = ((ExecutionSpecification)target).getOwnedElements();
+		}
+
+		if (elements == null)
+			return null;
+
+		List<Operation> operations = new ArrayList<Operation>();
+		// represents.type.ownedOperation + represents.type.interfaceRealization.contract.ownedOperation
+		for (Element element : elements) {
+			// represents.type.ownedOperation
+			if (element instanceof Operation) {
+				operations.add((Operation)element);
+			}
+			// represents.type.interfaceRealization.contract.ownedOperation
+			else if (element instanceof InterfaceRealization
+					&& ((InterfaceRealization)element).getContract() != null) {
+				operations.addAll(((InterfaceRealization)element).getContract().getAllOperations());
+			}
+		}
+
+		return operations;
 	}
 }
