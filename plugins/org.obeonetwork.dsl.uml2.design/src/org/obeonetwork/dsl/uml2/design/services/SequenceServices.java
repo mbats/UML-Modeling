@@ -392,12 +392,19 @@ public class SequenceServices {
 		// Ordered fragments
 		fragments.add(senderEventMessage);
 		// If message starts from an execution, add the message start after the execution specification
-		if (sourceFragment instanceof BehaviorExecutionSpecification)
-			fragments.move(fragments.indexOf(sourceFragment) + 1, senderEventMessage);
-		else
+		if (sourceFragment instanceof BehaviorExecutionSpecification) {
+			if (getExecution((InteractionFragment)startingEndPredecessor) != null
+					&& startingEndPredecessor
+							.equals(getExecution((InteractionFragment)startingEndPredecessor).getFinish()))
+				fragments.move(fragments.indexOf((InteractionFragment)startingEndPredecessor) + 1,
+						senderEventMessage);
+			else
+				fragments.move(fragments.indexOf(sourceFragment) + 1, senderEventMessage);
+		} else
 			// Message starts from a lifeline, add the message start after the last starting predecessor
 			// (message)
-			fragments.move(fragments.indexOf(startingEndPredecessor) + 1, senderEventMessage);
+			fragments.move(fragments.indexOf((InteractionFragment)startingEndPredecessor) + 1,
+					senderEventMessage);
 		interaction.getFragments().add(receiverEventMessage);
 
 		// If message starts from an execution and is not typed, add the message end after the execution end
@@ -449,13 +456,7 @@ public class SequenceServices {
 		interaction.getFragments().add(execution);
 		fragments.move(fragments.indexOf(receiverEventMessage) + 1, execution);
 		fragments.add(endExec);
-		// If message starts from an execution, add the message end after the parent execution end
-		if (sourceFragment instanceof BehaviorExecutionSpecification)
-			fragments.move(fragments.indexOf(((BehaviorExecutionSpecification)sourceFragment).getFinish()),
-					endExec);
-		else
-			fragments.move(fragments.indexOf(execution) + 1, endExec);
-
+		fragments.move(fragments.indexOf(execution) + 1, endExec);
 	}
 
 	/**

@@ -41,7 +41,7 @@ public class SequenceServiceTests extends TestCase {
 	/**
 	 * The test model URI.
 	 */
-	private static final String RESOURCE_URI2 = Activator.PLUGIN_ID + "/resources/Test.uml";
+	private static final String RESOURCE_URI = Activator.PLUGIN_ID + "/resources/Test.uml";
 
 	/**
 	 * The sequence services instance.
@@ -72,7 +72,7 @@ public class SequenceServiceTests extends TestCase {
 	 * Test the executionSemanticCandidates() service against {@link Lifeline}.
 	 */
 	public void testExecutionSemanticCandidatesLifeline() {
-		Interaction interaction = getInteraction(RESOURCE_URI2, "Scenario_5");
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_5");
 		Lifeline lifeline = interaction.getLifeline("consumers");
 		final List<ExecutionSpecification> executions = sequenceServices
 				.executionSemanticCandidates(lifeline);
@@ -87,7 +87,7 @@ public class SequenceServiceTests extends TestCase {
 	 * Test the executionSemanticCandidates() service against {@link ExecutionSpecification}.
 	 */
 	public void testExecutionSemanticCandidatesExecutionSpecification() {
-		Interaction interaction = getInteraction(RESOURCE_URI2, "Scenario_5");
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_5");
 		BehaviorExecutionSpecification execution = (BehaviorExecutionSpecification)interaction
 				.getFragment("compute");
 		final List<ExecutionSpecification> subExecution = sequenceServices
@@ -112,7 +112,7 @@ public class SequenceServiceTests extends TestCase {
 	 */
 	public void testFindOccurenceSpecificationContext() throws Exception {
 		OccurrenceSpecification executionOccurrence;
-		Interaction interaction = getInteraction(RESOURCE_URI2, "Scenario_6");
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_6");
 		executionOccurrence = (OccurrenceSpecification)interaction.getFragment("compute_start");
 		assertEquals("consumers", sequenceServices.findOccurrenceSpecificationContext(executionOccurrence)
 				.getName());
@@ -148,7 +148,7 @@ public class SequenceServiceTests extends TestCase {
 	 *             in case of error
 	 */
 	public void testCreateExecution() throws Exception {
-		Interaction interaction = getInteraction(RESOURCE_URI2, "Scenario_0");
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_0");
 		Lifeline lifeline = interaction.getLifeline("consumers");
 		sequenceServices.createExecution(interaction, lifeline, null);
 
@@ -176,7 +176,7 @@ public class SequenceServiceTests extends TestCase {
 	 *             in case of error
 	 */
 	public void testImportExecution() throws Exception {
-		Interaction interaction = getInteraction(RESOURCE_URI2, "Scenario_0");
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_0");
 		Lifeline lifeline = interaction.getLifeline("consumers");
 		Operation operation = (Operation)lifeline.getRepresents().getType().getOwnedElements().get(0);
 		sequenceServices.createExecution(interaction, lifeline, operation, null);
@@ -205,7 +205,7 @@ public class SequenceServiceTests extends TestCase {
 	 *             in case of error
 	 */
 	public void testCreateExecutionOnExecution() throws Exception {
-		Interaction interaction = getInteraction(RESOURCE_URI2, "Scenario_1");
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_1");
 		Lifeline lifeline = interaction.getLifeline("consumers");
 		ExecutionSpecification execution = (ExecutionSpecification)interaction.getFragment("compute");
 		sequenceServices.createExecution(interaction, lifeline, execution);
@@ -234,7 +234,7 @@ public class SequenceServiceTests extends TestCase {
 	 *             in case of error
 	 */
 	public void testCreateAsynchronousMessage() throws Exception {
-		Interaction interaction = getInteraction(RESOURCE_URI2, "Scenario_2");
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_2");
 		Lifeline source = interaction.getLifeline("consumers");
 		Lifeline target = interaction.getLifeline("producers");
 		sequenceServices.createAsynchronousMessage(interaction, source, target, null, null);
@@ -259,7 +259,7 @@ public class SequenceServiceTests extends TestCase {
 	 *             in case of error
 	 */
 	public void testCreateAsynchronousMessageOnExecution() throws Exception {
-		Interaction interaction = getInteraction(RESOURCE_URI2, "Scenario_3");
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_3");
 		Lifeline source = interaction.getLifeline("consumers");
 		Lifeline target = interaction.getLifeline("producers");
 		ExecutionSpecification execution = (ExecutionSpecification)interaction.getFragment("compute");
@@ -269,31 +269,38 @@ public class SequenceServiceTests extends TestCase {
 
 		List<InteractionFragment> fragments = interaction.getFragments();
 		assertEquals(5, fragments.size());
+
+		InteractionFragment sourceExecutionStart = fragments.get(0);
+		InteractionFragment sourceExecution = fragments.get(1);
+		InteractionFragment messageSend = fragments.get(2);
+		InteractionFragment sourceExecutionFinish = fragments.get(3);
+		InteractionFragment messageReceive = fragments.get(4);
+
 		// Execution
 		assertEquals("Opaque behavior does not exist", "compute", interaction.getOwnedBehaviors().get(0)
 				.getName());
-		assertTrue(fragments.get(0) instanceof ExecutionOccurrenceSpecification);
-		assertEquals("compute_start", fragments.get(0).getName());
-		assertTrue(fragments.get(3) instanceof ExecutionOccurrenceSpecification);
-		assertEquals("compute_finish", fragments.get(3).getName());
-		assertTrue(fragments.get(1) instanceof BehaviorExecutionSpecification);
-		assertEquals("compute", fragments.get(1).getName());
-		assertEquals(((BehaviorExecutionSpecification)fragments.get(1)).getStart(), fragments.get(0));
-		assertEquals(((BehaviorExecutionSpecification)fragments.get(1)).getFinish(), fragments.get(3));
-		assertNotNull(((BehaviorExecutionSpecification)fragments.get(1)).getCovered(source.getName()));
+		assertTrue(sourceExecutionStart instanceof ExecutionOccurrenceSpecification);
+		assertEquals("compute_start", sourceExecutionStart.getName());
+		assertTrue(sourceExecutionFinish instanceof ExecutionOccurrenceSpecification);
+		assertEquals("compute_finish", sourceExecutionFinish.getName());
+		assertTrue(sourceExecution instanceof BehaviorExecutionSpecification);
+		assertEquals("compute", sourceExecution.getName());
+		assertEquals(((BehaviorExecutionSpecification)sourceExecution).getStart(), sourceExecutionStart);
+		assertEquals(((BehaviorExecutionSpecification)sourceExecution).getFinish(), sourceExecutionFinish);
+		assertNotNull(((BehaviorExecutionSpecification)sourceExecution).getCovered(source.getName()));
 		assertEquals(interaction.getOwnedBehaviors().get(0),
-				((BehaviorExecutionSpecification)fragments.get(1)).getBehavior());
+				((BehaviorExecutionSpecification)sourceExecution).getBehavior());
 
 		// Message
 		assertEquals("Message does not exist", "Message_0", interaction.getMessages().get(0).getName());
-		assertTrue(fragments.get(2) instanceof MessageOccurrenceSpecification);
-		assertEquals("Message_0_sender", fragments.get(2).getName());
-		assertTrue(fragments.get(4) instanceof MessageOccurrenceSpecification);
-		assertEquals("Message_0_receiver", fragments.get(4).getName());
-		assertEquals(((Message)interaction.getMessages().get(0)).getSendEvent(), fragments.get(2));
-		assertEquals(((Message)interaction.getMessages().get(0)).getReceiveEvent(), fragments.get(4));
-		assertNotNull(((MessageOccurrenceSpecification)fragments.get(2)).getCovered(source.getName()));
-		assertNotNull(((MessageOccurrenceSpecification)fragments.get(4)).getCovered(target.getName()));
+		assertTrue(messageSend instanceof MessageOccurrenceSpecification);
+		assertEquals("Message_0_sender", messageSend.getName());
+		assertTrue(messageReceive instanceof MessageOccurrenceSpecification);
+		assertEquals("Message_0_receiver", messageReceive.getName());
+		assertEquals(((Message)interaction.getMessages().get(0)).getSendEvent(), messageSend);
+		assertEquals(((Message)interaction.getMessages().get(0)).getReceiveEvent(), messageReceive);
+		assertNotNull(((MessageOccurrenceSpecification)messageSend).getCovered(source.getName()));
+		assertNotNull(((MessageOccurrenceSpecification)messageReceive).getCovered(target.getName()));
 	}
 
 	/**
@@ -303,7 +310,7 @@ public class SequenceServiceTests extends TestCase {
 	 *             in case of error
 	 */
 	public void testImportAsynchronousMessage() throws Exception {
-		Interaction interaction = getInteraction(RESOURCE_URI2, "Scenario_2");
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_2");
 		Lifeline source = interaction.getLifeline("consumers");
 		Lifeline target = interaction.getLifeline("producers");
 		Operation operation = (Operation)source.getRepresents().getType().getOwnedElements().get(0);
@@ -345,7 +352,7 @@ public class SequenceServiceTests extends TestCase {
 	 *             in case of error
 	 */
 	public void testImportAsynchronousMessageOnExecution() throws Exception {
-		Interaction interaction = getInteraction(RESOURCE_URI2, "Scenario_3");
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_3");
 		Lifeline source = interaction.getLifeline("consumers");
 		Lifeline target = interaction.getLifeline("producers");
 		Operation operation = (Operation)target.getRepresents().getType().getOwnedElements().get(1);
@@ -406,6 +413,104 @@ public class SequenceServiceTests extends TestCase {
 	}
 
 	/**
+	 * Test createAsynchronousMessage service. Import two asynchronous messages between an existing execution
+	 * and an empty lifeline.
+	 * 
+	 * @throws Exception
+	 *             in case of error
+	 */
+	public void testImportTwoAsynchronousMessagesOnExecution() throws Exception {
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_7");
+		Lifeline source = interaction.getLifeline("consumers");
+		Lifeline target = interaction.getLifeline("producers");
+		Operation operation = (Operation)target.getRepresents().getType().getOwnedElements().get(0);
+		ExecutionSpecification execution = (ExecutionSpecification)interaction.getFragment("compute");
+		ExecutionSpecification execution2 = (ExecutionSpecification)interaction.getFragment("get");
+		sequenceServices.createAsynchronousMessage(interaction, execution, target, operation,
+				execution2.getFinish(), execution2.getFinish());
+
+		List<InteractionFragment> fragments = interaction.getFragments();
+		assertEquals(11, fragments.size());
+
+		InteractionFragment sourceExecutionStart = fragments.get(0);
+		InteractionFragment sourceExecution = fragments.get(1);
+		InteractionFragment messageSend = fragments.get(2);
+		InteractionFragment messageReceive = fragments.get(3);
+		InteractionFragment targetExecution = fragments.get(4);
+		InteractionFragment targetExecutionFinish = fragments.get(5);
+		InteractionFragment messageSend2 = fragments.get(6);
+		InteractionFragment messageReceive2 = fragments.get(7);
+		InteractionFragment targetExecution2 = fragments.get(8);
+		InteractionFragment targetExecution2Finish = fragments.get(9);
+		InteractionFragment sourceExecutionFinish = fragments.get(10);
+
+		// Execution compute
+		assertEquals("Opaque behavior does not exist", "compute", interaction.getOwnedBehaviors().get(0)
+				.getName());
+		assertTrue(sourceExecutionStart instanceof ExecutionOccurrenceSpecification);
+		assertEquals("compute_start", sourceExecutionStart.getName());
+		assertTrue(sourceExecutionFinish instanceof ExecutionOccurrenceSpecification);
+		assertEquals("compute_finish", sourceExecutionFinish.getName());
+		assertTrue(sourceExecution instanceof BehaviorExecutionSpecification);
+		assertEquals("compute", sourceExecution.getName());
+		assertEquals(((BehaviorExecutionSpecification)sourceExecution).getStart(), sourceExecutionStart);
+		assertEquals(((BehaviorExecutionSpecification)sourceExecution).getFinish(), sourceExecutionFinish);
+		assertNotNull(((BehaviorExecutionSpecification)sourceExecution).getCovered(source.getName()));
+		assertEquals(interaction.getOwnedBehaviors().get(0),
+				((BehaviorExecutionSpecification)sourceExecution).getBehavior());
+
+		// Message get
+		Message message = (Message)interaction.getMessages().get(0);
+		assertEquals("Message does not exist", "get", message.getName());
+		assertTrue(messageSend instanceof MessageOccurrenceSpecification);
+		assertEquals("get_sender", messageSend.getName());
+		assertTrue(messageReceive instanceof MessageOccurrenceSpecification);
+		assertEquals("get_receiver", messageReceive.getName());
+		assertEquals(message.getSendEvent(), messageSend);
+		assertEquals(message.getReceiveEvent(), messageReceive);
+		assertNotNull(((MessageOccurrenceSpecification)messageSend).getCovered(source.getName()));
+		assertNotNull(((MessageOccurrenceSpecification)messageReceive).getCovered(target.getName()));
+
+		// Execution get
+		assertEquals("Opaque behavior does not exist", "get", interaction.getOwnedBehaviors().get(1)
+				.getName());
+		assertTrue(targetExecution instanceof BehaviorExecutionSpecification);
+		assertEquals("get", targetExecution.getName());
+		assertEquals(((BehaviorExecutionSpecification)targetExecution).getStart(), messageReceive);
+		assertTrue(targetExecutionFinish instanceof ExecutionOccurrenceSpecification);
+		assertEquals("get_finish", targetExecutionFinish.getName());
+		assertEquals(((BehaviorExecutionSpecification)targetExecution).getFinish(), targetExecutionFinish);
+		assertNotNull(((BehaviorExecutionSpecification)targetExecution).getCovered(target.getName()));
+		assertEquals(interaction.getOwnedBehaviors().get(1),
+				((BehaviorExecutionSpecification)targetExecution).getBehavior());
+
+		// Message produce
+		Message message2 = (Message)interaction.getMessages().get(1);
+		assertEquals("Message does not exist", "produce", interaction.getMessages().get(1).getName());
+		assertTrue(messageSend2 instanceof MessageOccurrenceSpecification);
+		assertEquals("produce_sender", messageSend2.getName());
+		assertTrue(messageReceive2 instanceof MessageOccurrenceSpecification);
+		assertEquals("produce_receiver", messageReceive2.getName());
+		assertEquals(message2.getSendEvent(), messageSend2);
+		assertEquals(message2.getReceiveEvent(), messageReceive2);
+		assertNotNull(((MessageOccurrenceSpecification)messageSend2).getCovered(source.getName()));
+		assertNotNull(((MessageOccurrenceSpecification)messageReceive2).getCovered(target.getName()));
+
+		// Execution produce
+		assertEquals("Opaque behavior does not exist", "produce", interaction.getOwnedBehaviors().get(2)
+				.getName());
+		assertTrue(targetExecution2 instanceof BehaviorExecutionSpecification);
+		assertEquals("produce", targetExecution2.getName());
+		assertEquals(((BehaviorExecutionSpecification)targetExecution2).getStart(), messageReceive2);
+		assertTrue(targetExecution2Finish instanceof ExecutionOccurrenceSpecification);
+		assertEquals("produce_finish", targetExecution2Finish.getName());
+		assertEquals(((BehaviorExecutionSpecification)targetExecution2).getFinish(), targetExecution2Finish);
+		assertNotNull(((BehaviorExecutionSpecification)targetExecution2).getCovered(target.getName()));
+		assertEquals(interaction.getOwnedBehaviors().get(2),
+				((BehaviorExecutionSpecification)targetExecution2).getBehavior());
+	}
+
+	/**
 	 * Test createAsynchronousMessage service. Import an asynchronous message between an existing execution
 	 * and an empty lifeline.
 	 * 
@@ -413,7 +518,7 @@ public class SequenceServiceTests extends TestCase {
 	 *             in case of error
 	 */
 	public void testCreateAsynchronousMessageOnExecutionToExecution() throws Exception {
-		Interaction interaction = getInteraction(RESOURCE_URI2, "Scenario_4");
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_4");
 		Lifeline source = interaction.getLifeline("consumers");
 		Lifeline target = interaction.getLifeline("producers");
 		ExecutionSpecification executionSource = (ExecutionSpecification)interaction.getFragment("compute");
@@ -481,7 +586,7 @@ public class SequenceServiceTests extends TestCase {
 	 *             in case of error
 	 */
 	public void testCreateSynchronousMessage() throws Exception {
-		Interaction interaction = getInteraction(RESOURCE_URI2, "Scenario_2");
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_2");
 		Lifeline source = interaction.getLifeline("consumers");
 		Lifeline target = interaction.getLifeline("producers");
 		sequenceServices.createSynchronousMessage(interaction, source, target, null, null);
@@ -519,7 +624,7 @@ public class SequenceServiceTests extends TestCase {
 	 *             in case of error
 	 */
 	public void testCreateSynchronousMessageOnExecution() throws Exception {
-		Interaction interaction = getInteraction(RESOURCE_URI2, "Scenario_3");
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_3");
 		Lifeline source = interaction.getLifeline("consumers");
 		Lifeline target = interaction.getLifeline("producers");
 		ExecutionSpecification execution = (ExecutionSpecification)interaction.getFragment("compute");
@@ -588,7 +693,7 @@ public class SequenceServiceTests extends TestCase {
 	 *             in case of error
 	 */
 	public void testCreateSynchronousMessageOnExecutionToExecution() throws Exception {
-		Interaction interaction = getInteraction(RESOURCE_URI2, "Scenario_4");
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_4");
 		Lifeline source = interaction.getLifeline("consumers");
 		Lifeline target = interaction.getLifeline("producers");
 		ExecutionSpecification executionSource = (ExecutionSpecification)interaction.getFragment("compute");
@@ -658,7 +763,7 @@ public class SequenceServiceTests extends TestCase {
 	 *             in case of error
 	 */
 	public void testImportSynchronousMessageOnExecution() throws Exception {
-		Interaction interaction = getInteraction(RESOURCE_URI2, "Scenario_3");
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_3");
 		Lifeline source = interaction.getLifeline("consumers");
 		Lifeline target = interaction.getLifeline("producers");
 		Operation operation = (Operation)target.getRepresents().getType().getOwnedElements().get(1);
@@ -737,7 +842,7 @@ public class SequenceServiceTests extends TestCase {
 	 *             in case of error
 	 */
 	public void testImportSynchronousMessage() throws Exception {
-		Interaction interaction = getInteraction(RESOURCE_URI2, "Scenario_2");
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_2");
 		Lifeline source = interaction.getLifeline("consumers");
 		Lifeline target = interaction.getLifeline("producers");
 		Operation operation = (Operation)source.getRepresents().getType().getOwnedElements().get(0);
