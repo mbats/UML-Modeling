@@ -451,7 +451,7 @@ public class SequenceServices {
 		// If message starts from an execution, add the message end after the parent execution end
 		if (sourceFragment instanceof BehaviorExecutionSpecification)
 			fragments.move(
-					fragments.indexOf(((BehaviorExecutionSpecification)sourceFragment).getFinish()) + 1,
+					fragments.indexOf(((BehaviorExecutionSpecification)sourceFragment).getFinish()),
 					endExec);
 		else
 			fragments.move(fragments.indexOf(execution) + 1, endExec);
