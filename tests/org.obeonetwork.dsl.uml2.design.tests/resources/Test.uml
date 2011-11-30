@@ -7,10 +7,10 @@
           <type xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/JavaPrimitiveTypes.library.uml#int"/>
         </ownedParameter>
       </ownedOperation>
-      <ownedOperation xmi:id="_2lnr0AktEeGvSubrM0lppw" name="get" method="_Spee8BnTEeGCdrQISLnF0A _YSxyUBnqEeGglfZsXl4VOQ _2uJKUBpzEeGWjr3-Gx2wcA"/>
+      <ownedOperation xmi:id="_2lnr0AktEeGvSubrM0lppw" name="get" method="_Spee8BnTEeGCdrQISLnF0A _YSxyUBnqEeGglfZsXl4VOQ _2uJKUBpzEeGWjr3-Gx2wcA _z_eA4RtgEeGmWezIlnxuUg"/>
     </packagedElement>
     <packagedElement xmi:type="uml:Class" xmi:id="_kcjDEAksEeGS4-mV_m3ZXQ" name="Consumer">
-      <ownedOperation xmi:id="_3_u5YAktEeGvSubrM0lppw" name="compute" method="_Db3f0BazEeGi4d_NPq-rGA _6VizEBmoEeGCgYzEJ9BPkA _R8ljwBnTEeGCdrQISLnF0A _X4DskBnnEeGUdMKJ5RNKyA _W-dDsBnqEeGglfZsXl4VOQ _1YVN8BpzEeGWjr3-Gx2wcA"/>
+      <ownedOperation xmi:id="_3_u5YAktEeGvSubrM0lppw" name="compute" method="_Db3f0BazEeGi4d_NPq-rGA _6VizEBmoEeGCgYzEJ9BPkA _R8ljwBnTEeGCdrQISLnF0A _X4DskBnnEeGUdMKJ5RNKyA _W-dDsBnqEeGglfZsXl4VOQ _1YVN8BpzEeGWjr3-Gx2wcA _yeNCcBtgEeGmWezIlnxuUg _7qydEBt8EeGbBc6JslGyAw"/>
     </packagedElement>
     <packagedElement xmi:type="uml:Association" xmi:id="_pYMdsAksEeGS4-mV_m3ZXQ" name="producersToConsumers" memberEnd="_pYNEwAksEeGS4-mV_m3ZXQ _pYQvIAksEeGS4-mV_m3ZXQ" navigableOwnedEnd="_pYNEwAksEeGS4-mV_m3ZXQ _pYQvIAksEeGS4-mV_m3ZXQ">
       <ownedEnd xmi:id="_pYNEwAksEeGS4-mV_m3ZXQ" name="producers" type="_jfb6kAksEeGS4-mV_m3ZXQ" association="_pYMdsAksEeGS4-mV_m3ZXQ">
@@ -125,5 +125,27 @@
     <fragment xmi:type="uml:ExecutionOccurrenceSpecification" xmi:id="_2uKYcBpzEeGWjr3-Gx2wcA" name="get_finish" covered="_0lteMBpzEeGWjr3-Gx2wcA" execution="_2uJKURpzEeGWjr3-Gx2wcA"/>
     <fragment xmi:type="uml:ExecutionOccurrenceSpecification" xmi:id="_1YV1AhpzEeGWjr3-Gx2wcA" name="compute_finish" covered="_0B_tIBpzEeGWjr3-Gx2wcA" execution="_1YV1ARpzEeGWjr3-Gx2wcA"/>
     <message xmi:id="_2uH8MBpzEeGWjr3-Gx2wcA" name="get" receiveEvent="_2uIjQRpzEeGWjr3-Gx2wcA" sendEvent="_2uIjQBpzEeGWjr3-Gx2wcA"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Interaction" xmi:id="_fNR2QBteEeGmWezIlnxuUg" name="Scenario_8">
+    <ownedBehavior xmi:type="uml:OpaqueBehavior" xmi:id="_yeNCcBtgEeGmWezIlnxuUg" name="compute" specification="_3_u5YAktEeGvSubrM0lppw"/>
+    <ownedBehavior xmi:type="uml:OpaqueBehavior" xmi:id="_z_eA4RtgEeGmWezIlnxuUg" name="get" specification="_2lnr0AktEeGvSubrM0lppw"/>
+    <lifeline xmi:id="_hF2hcBteEeGmWezIlnxuUg" name="consumers" represents="_pYQvIAksEeGS4-mV_m3ZXQ" coveredBy="_yeNCcRtgEeGmWezIlnxuUg _yeNpgBtgEeGmWezIlnxuUg _yeNpgRtgEeGmWezIlnxuUg _z_dZ0BtgEeGmWezIlnxuUg"/>
+    <lifeline xmi:id="_ho0EkBteEeGmWezIlnxuUg" name="producers" represents="_pYNEwAksEeGS4-mV_m3ZXQ" coveredBy="_z_eA4BtgEeGmWezIlnxuUg _z_en8BtgEeGmWezIlnxuUg _z_en8RtgEeGmWezIlnxuUg"/>
+    <fragment xmi:type="uml:ExecutionOccurrenceSpecification" xmi:id="_yeNCcRtgEeGmWezIlnxuUg" name="compute_start" covered="_hF2hcBteEeGmWezIlnxuUg" execution="_yeNpgBtgEeGmWezIlnxuUg"/>
+    <fragment xmi:type="uml:BehaviorExecutionSpecification" xmi:id="_yeNpgBtgEeGmWezIlnxuUg" name="compute" covered="_hF2hcBteEeGmWezIlnxuUg" start="_yeNCcRtgEeGmWezIlnxuUg" finish="_yeNpgRtgEeGmWezIlnxuUg" behavior="_yeNCcBtgEeGmWezIlnxuUg"/>
+    <fragment xmi:type="uml:MessageOccurrenceSpecification" xmi:id="_z_dZ0BtgEeGmWezIlnxuUg" name="get_sender" covered="_hF2hcBteEeGmWezIlnxuUg" message="_z_cywBtgEeGmWezIlnxuUg"/>
+    <fragment xmi:type="uml:MessageOccurrenceSpecification" xmi:id="_z_eA4BtgEeGmWezIlnxuUg" name="get_receiver" covered="_ho0EkBteEeGmWezIlnxuUg" message="_z_cywBtgEeGmWezIlnxuUg"/>
+    <fragment xmi:type="uml:BehaviorExecutionSpecification" xmi:id="_z_en8BtgEeGmWezIlnxuUg" name="get" covered="_ho0EkBteEeGmWezIlnxuUg" start="_z_eA4BtgEeGmWezIlnxuUg" finish="_z_en8RtgEeGmWezIlnxuUg" behavior="_z_eA4RtgEeGmWezIlnxuUg"/>
+    <fragment xmi:type="uml:ExecutionOccurrenceSpecification" xmi:id="_z_en8RtgEeGmWezIlnxuUg" name="get_finish" covered="_ho0EkBteEeGmWezIlnxuUg" execution="_z_en8BtgEeGmWezIlnxuUg"/>
+    <fragment xmi:type="uml:ExecutionOccurrenceSpecification" xmi:id="_yeNpgRtgEeGmWezIlnxuUg" name="compute_finish" covered="_hF2hcBteEeGmWezIlnxuUg" execution="_yeNpgBtgEeGmWezIlnxuUg"/>
+    <message xmi:id="_z_cywBtgEeGmWezIlnxuUg" name="get" receiveEvent="_z_eA4BtgEeGmWezIlnxuUg" sendEvent="_z_dZ0BtgEeGmWezIlnxuUg"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Interaction" xmi:id="_241J8Bt8EeGbBc6JslGyAw" name="Scenario_9">
+    <ownedBehavior xmi:type="uml:OpaqueBehavior" xmi:id="_7qydEBt8EeGbBc6JslGyAw" name="compute" specification="_3_u5YAktEeGvSubrM0lppw"/>
+    <lifeline xmi:id="_40m6IBt8EeGbBc6JslGyAw" name="consumers" represents="_pYQvIAksEeGS4-mV_m3ZXQ" coveredBy="_7qzEIBt8EeGbBc6JslGyAw _7qzEIRt8EeGbBc6JslGyAw _7qzrMBt8EeGbBc6JslGyAw"/>
+    <lifeline xmi:id="_5fUrEBt8EeGbBc6JslGyAw" name="producers" represents="_pYNEwAksEeGS4-mV_m3ZXQ"/>
+    <fragment xmi:type="uml:ExecutionOccurrenceSpecification" xmi:id="_7qzEIBt8EeGbBc6JslGyAw" name="compute_start" covered="_40m6IBt8EeGbBc6JslGyAw" execution="_7qzEIRt8EeGbBc6JslGyAw"/>
+    <fragment xmi:type="uml:BehaviorExecutionSpecification" xmi:id="_7qzEIRt8EeGbBc6JslGyAw" name="compute" covered="_40m6IBt8EeGbBc6JslGyAw" start="_7qzEIBt8EeGbBc6JslGyAw" finish="_7qzrMBt8EeGbBc6JslGyAw" behavior="_7qydEBt8EeGbBc6JslGyAw"/>
+    <fragment xmi:type="uml:ExecutionOccurrenceSpecification" xmi:id="_7qzrMBt8EeGbBc6JslGyAw" name="compute_finish" covered="_40m6IBt8EeGbBc6JslGyAw" execution="_7qzEIRt8EeGbBc6JslGyAw"/>
   </packagedElement>
 </uml:Model>

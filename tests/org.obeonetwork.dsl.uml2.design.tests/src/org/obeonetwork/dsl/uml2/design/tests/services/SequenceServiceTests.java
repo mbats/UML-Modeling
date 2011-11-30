@@ -18,6 +18,7 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.uml2.uml.Behavior;
 import org.eclipse.uml2.uml.BehaviorExecutionSpecification;
 import org.eclipse.uml2.uml.ExecutionOccurrenceSpecification;
 import org.eclipse.uml2.uml.ExecutionSpecification;
@@ -273,8 +274,8 @@ public class SequenceServiceTests extends TestCase {
 		InteractionFragment sourceExecutionStart = fragments.get(0);
 		InteractionFragment sourceExecution = fragments.get(1);
 		InteractionFragment messageSend = fragments.get(2);
-		InteractionFragment sourceExecutionFinish = fragments.get(3);
-		InteractionFragment messageReceive = fragments.get(4);
+		InteractionFragment messageReceive = fragments.get(3);
+		InteractionFragment sourceExecutionFinish = fragments.get(4);
 
 		// Execution
 		assertEquals("Opaque behavior does not exist", "compute", interaction.getOwnedBehaviors().get(0)
@@ -518,13 +519,19 @@ public class SequenceServiceTests extends TestCase {
 	 *             in case of error
 	 */
 	public void testCreateAsynchronousMessageOnExecutionToExecution() throws Exception {
+		// Interaction scenario_4
 		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_4");
 		Lifeline source = interaction.getLifeline("consumers");
 		Lifeline target = interaction.getLifeline("producers");
+		// SourceFragment compute behavior
 		ExecutionSpecification executionSource = (ExecutionSpecification)interaction.getFragment("compute");
+		// TargetFragment get behavior
 		ExecutionSpecification executionTarget = (ExecutionSpecification)interaction.getFragment("get");
+		// Operation null
+		// StartingElementPredecessor compute_start
+		// FinishingElementPredecessor compute_start
 		sequenceServices.createAsynchronousMessage(interaction, executionSource, executionTarget,
-				executionTarget.getStart(), executionTarget.getStart());
+				executionSource.getStart(), executionSource.getStart());
 
 		List<InteractionFragment> fragments = interaction.getFragments();
 		assertEquals(7, fragments.size());
@@ -633,56 +640,64 @@ public class SequenceServiceTests extends TestCase {
 				execution.getStart());
 
 		List<InteractionFragment> fragments = interaction.getFragments();
-		assertEquals(9, fragments.size());
-		// Execution
-		assertEquals("Opaque behavior does not exist", "compute", interaction.getOwnedBehaviors().get(0)
-				.getName());
-		assertTrue(fragments.get(0) instanceof ExecutionOccurrenceSpecification);
-		assertEquals("compute_start", fragments.get(0).getName());
-		assertTrue(fragments.get(3) instanceof ExecutionOccurrenceSpecification);
-		assertEquals("compute_finish", fragments.get(3).getName());
-		assertTrue(fragments.get(1) instanceof BehaviorExecutionSpecification);
-		assertEquals("compute", fragments.get(1).getName());
-		assertEquals(((BehaviorExecutionSpecification)fragments.get(1)).getStart(), fragments.get(0));
-		assertEquals(((BehaviorExecutionSpecification)fragments.get(1)).getFinish(), fragments.get(3));
-		assertNotNull(((BehaviorExecutionSpecification)fragments.get(1)).getCovered(source.getName()));
-		assertEquals(interaction.getOwnedBehaviors().get(0),
-				((BehaviorExecutionSpecification)fragments.get(1)).getBehavior());
+		assertEquals(8, fragments.size());
+		InteractionFragment computeStart = fragments.get(0);
+		InteractionFragment compute = fragments.get(1);
+		InteractionFragment messageSend = fragments.get(2);
+		InteractionFragment messageReceive = fragments.get(3);
+		InteractionFragment messageReplySend = fragments.get(4);
+		InteractionFragment messageReplyReceive = fragments.get(5);
+		InteractionFragment compute2 = fragments.get(6);
+		InteractionFragment computeFinish2 = fragments.get(7);
 
-		// Message
-		assertEquals("Message does not exist", "Message_0", interaction.getMessages().get(0).getName());
-		assertTrue(fragments.get(2) instanceof MessageOccurrenceSpecification);
-		assertEquals("Message_0_sender", fragments.get(2).getName());
-		assertTrue(fragments.get(4) instanceof MessageOccurrenceSpecification);
-		assertEquals("Message_0_receiver", fragments.get(4).getName());
-		assertEquals(((Message)interaction.getMessages().get(0)).getSendEvent(), fragments.get(2));
-		assertEquals(((Message)interaction.getMessages().get(0)).getReceiveEvent(), fragments.get(4));
-		assertNotNull(((MessageOccurrenceSpecification)fragments.get(2)).getCovered(source.getName()));
-		assertNotNull(((MessageOccurrenceSpecification)fragments.get(4)).getCovered(target.getName()));
+		// Execution compute
+		Behavior computeBehavior = interaction.getOwnedBehaviors().get(0);
+		assertEquals("Opaque behavior does not exist", "compute", computeBehavior.getName());
+		assertTrue(computeStart instanceof ExecutionOccurrenceSpecification);
+		assertEquals("compute_start", computeStart.getName());
+		assertTrue(messageSend instanceof MessageOccurrenceSpecification);
+		assertEquals("Message_0_sender", messageSend.getName());
+		assertTrue(compute instanceof BehaviorExecutionSpecification);
+		assertEquals("compute", compute.getName());
+		assertEquals(((BehaviorExecutionSpecification)compute).getStart(), computeStart);
+		assertEquals(((BehaviorExecutionSpecification)compute).getFinish(), messageSend);
+		assertNotNull(((BehaviorExecutionSpecification)compute).getCovered(source.getName()));
+		assertEquals(computeBehavior, ((BehaviorExecutionSpecification)compute).getBehavior());
 
-		// Reply message
-		assertEquals("Message does not exist", "Message_0_reply", interaction.getMessages().get(1).getName());
-		assertTrue(fragments.get(5) instanceof MessageOccurrenceSpecification);
-		assertEquals("Message_0_reply_sender", fragments.get(5).getName());
-		assertTrue(fragments.get(6) instanceof MessageOccurrenceSpecification);
-		assertEquals("Message_0_reply_receiver", fragments.get(6).getName());
-		assertEquals(((Message)interaction.getMessages().get(1)).getSendEvent(), fragments.get(5));
-		assertEquals(((Message)interaction.getMessages().get(1)).getReceiveEvent(), fragments.get(6));
-		assertNotNull(((MessageOccurrenceSpecification)fragments.get(5)).getCovered(target.getName()));
-		assertNotNull(((MessageOccurrenceSpecification)fragments.get(6)).getCovered(source.getName()));
+		// Message Message_0
+		Message message = interaction.getMessages().get(0);
+		assertEquals("Message does not exist", "Message_0", message.getName());
+		assertTrue(messageSend instanceof MessageOccurrenceSpecification);
+		assertEquals("Message_0_sender", messageSend.getName());
+		assertTrue(messageReceive instanceof MessageOccurrenceSpecification);
+		assertEquals("Message_0_receiver", messageReceive.getName());
+		assertEquals(message.getSendEvent(), messageSend);
+		assertEquals(message.getReceiveEvent(), messageReceive);
+		assertNotNull(((MessageOccurrenceSpecification)messageSend).getCovered(source.getName()));
+		assertNotNull(((MessageOccurrenceSpecification)messageReceive).getCovered(target.getName()));
 
-		// Execution
-		assertEquals("Opaque behavior does not exist", "compute", interaction.getOwnedBehaviors().get(0)
-				.getName());
-		assertTrue(fragments.get(8) instanceof ExecutionOccurrenceSpecification);
-		assertEquals("compute_finish2", fragments.get(8).getName());
-		assertTrue(fragments.get(7) instanceof BehaviorExecutionSpecification);
-		assertEquals("compute", fragments.get(7).getName());
-		assertEquals(((BehaviorExecutionSpecification)fragments.get(7)).getStart(), fragments.get(6));
-		assertEquals(((BehaviorExecutionSpecification)fragments.get(7)).getFinish(), fragments.get(8));
-		assertNotNull(((BehaviorExecutionSpecification)fragments.get(7)).getCovered(source.getName()));
-		assertEquals(interaction.getOwnedBehaviors().get(0),
-				((BehaviorExecutionSpecification)fragments.get(7)).getBehavior());
+		// Reply message Message_0
+		Message messageReply = interaction.getMessages().get(1);
+		assertEquals("Message does not exist", "Message_0_reply", messageReply.getName());
+		assertTrue(messageReplySend instanceof MessageOccurrenceSpecification);
+		assertEquals("Message_0_reply_sender", messageReplySend.getName());
+		assertTrue(messageReplyReceive instanceof MessageOccurrenceSpecification);
+		assertEquals("Message_0_reply_receiver", messageReplyReceive.getName());
+		assertEquals(messageReply.getSendEvent(), messageReplySend);
+		assertEquals(messageReply.getReceiveEvent(), messageReplyReceive);
+		assertNotNull(((MessageOccurrenceSpecification)messageReplySend).getCovered(target.getName()));
+		assertNotNull(((MessageOccurrenceSpecification)messageReplyReceive).getCovered(source.getName()));
+
+		// Execution compute split
+		assertEquals("Opaque behavior does not exist", "compute", computeBehavior.getName());
+		assertTrue(computeFinish2 instanceof ExecutionOccurrenceSpecification);
+		assertEquals("compute_finish2", computeFinish2.getName());
+		assertTrue(compute2 instanceof BehaviorExecutionSpecification);
+		assertEquals("compute", compute2.getName());
+		assertEquals(((BehaviorExecutionSpecification)compute2).getStart(), messageReplyReceive);
+		assertEquals(((BehaviorExecutionSpecification)compute2).getFinish(), computeFinish2);
+		assertNotNull(((BehaviorExecutionSpecification)compute2).getCovered(source.getName()));
+		assertEquals(computeBehavior, ((BehaviorExecutionSpecification)compute2).getBehavior());
 	}
 
 	/**
@@ -693,66 +708,96 @@ public class SequenceServiceTests extends TestCase {
 	 *             in case of error
 	 */
 	public void testCreateSynchronousMessageOnExecutionToExecution() throws Exception {
+		// Interaction Scenario_4
 		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_4");
+		// SourceFragment compute execution
+		ExecutionSpecification executionSource = (ExecutionSpecification)interaction.getFragment("compute");
+		// TargetFragment get execution
+		ExecutionSpecification executionTarget = (ExecutionSpecification)interaction.getFragment("get");
+		// Operation null
+		// StartingEndPredecessor compute_start
+		// FinishingEndPredecessor compute_start
 		Lifeline source = interaction.getLifeline("consumers");
 		Lifeline target = interaction.getLifeline("producers");
-		ExecutionSpecification executionSource = (ExecutionSpecification)interaction.getFragment("compute");
-		ExecutionSpecification executionTarget = (ExecutionSpecification)interaction.getFragment("get");
 
 		sequenceServices.createSynchronousMessage(interaction, executionSource, executionTarget,
-				executionTarget.getStart(), executionTarget.getStart());
+				executionSource.getStart(), executionSource.getStart());
 
 		List<InteractionFragment> fragments = interaction.getFragments();
-		assertEquals(10, fragments.size());
-		// Execution
-		assertEquals("Opaque behavior does not exist", "compute", interaction.getOwnedBehaviors().get(0)
-				.getName());
-		assertTrue(fragments.get(0) instanceof ExecutionOccurrenceSpecification);
-		assertEquals("compute_start", fragments.get(0).getName());
-		assertTrue(fragments.get(5) instanceof ExecutionOccurrenceSpecification);
-		assertEquals("compute_finish", fragments.get(5).getName());
-		assertTrue(fragments.get(1) instanceof BehaviorExecutionSpecification);
-		assertEquals("compute", fragments.get(1).getName());
-		assertEquals(((BehaviorExecutionSpecification)fragments.get(1)).getStart(), fragments.get(0));
-		assertEquals(((BehaviorExecutionSpecification)fragments.get(1)).getFinish(), fragments.get(5));
-		assertNotNull(((BehaviorExecutionSpecification)fragments.get(1)).getCovered(source.getName()));
-		assertEquals(interaction.getOwnedBehaviors().get(0),
-				((BehaviorExecutionSpecification)fragments.get(1)).getBehavior());
+		assertEquals(9, fragments.size());
 
-		// Message
-		assertEquals("Message does not exist", "get", interaction.getMessages().get(0).getName());
-		assertTrue(fragments.get(2) instanceof MessageOccurrenceSpecification);
-		assertEquals("get_sender", fragments.get(2).getName());
-		assertTrue(fragments.get(3) instanceof MessageOccurrenceSpecification);
-		assertEquals("get_receiver", fragments.get(3).getName());
-		assertEquals(((Message)interaction.getMessages().get(0)).getSendEvent(), fragments.get(2));
-		assertEquals(((Message)interaction.getMessages().get(0)).getReceiveEvent(), fragments.get(3));
-		assertNotNull(((MessageOccurrenceSpecification)fragments.get(2)).getCovered(source.getName()));
-		assertNotNull(((MessageOccurrenceSpecification)fragments.get(3)).getCovered(target.getName()));
+		InteractionFragment computeStart = fragments.get(0);
+		InteractionFragment compute = fragments.get(1);
+		InteractionFragment getSend = fragments.get(2);
+		InteractionFragment getReceive = fragments.get(3);
+		InteractionFragment get = fragments.get(4);
+		InteractionFragment getReplySend = fragments.get(5);
+		InteractionFragment getReplyReceive = fragments.get(6);
+		InteractionFragment compute2 = fragments.get(7);
+		InteractionFragment computeFinish2 = fragments.get(8);
 
-		// Reply message
-		assertEquals("Message does not exist", "get_reply", interaction.getMessages().get(1).getName());
-		assertTrue(fragments.get(6) instanceof MessageOccurrenceSpecification);
-		assertEquals("get_reply_sender", fragments.get(6).getName());
-		assertTrue(fragments.get(7) instanceof MessageOccurrenceSpecification);
-		assertEquals("get_reply_receiver", fragments.get(7).getName());
-		assertEquals(((Message)interaction.getMessages().get(1)).getSendEvent(), fragments.get(6));
-		assertEquals(((Message)interaction.getMessages().get(1)).getReceiveEvent(), fragments.get(7));
-		assertNotNull(((MessageOccurrenceSpecification)fragments.get(6)).getCovered(target.getName()));
-		assertNotNull(((MessageOccurrenceSpecification)fragments.get(7)).getCovered(source.getName()));
+		// Execution compute
+		Behavior computeBehavior = interaction.getOwnedBehaviors().get(0);
+		assertEquals("Opaque behavior does not exist", "compute", computeBehavior.getName());
+		assertTrue(computeStart instanceof ExecutionOccurrenceSpecification);
+		assertEquals("compute_start", computeStart.getName());
+		assertTrue(getSend instanceof MessageOccurrenceSpecification);
+		assertEquals("get_sender", getSend.getName());
+		assertTrue(compute instanceof BehaviorExecutionSpecification);
+		assertEquals("compute", compute.getName());
+		assertEquals(((BehaviorExecutionSpecification)compute).getStart(), computeStart);
+		assertEquals(((BehaviorExecutionSpecification)compute).getFinish(), getSend);
+		assertNotNull(((BehaviorExecutionSpecification)compute).getCovered(source.getName()));
+		assertEquals(computeBehavior, ((BehaviorExecutionSpecification)compute).getBehavior());
 
-		// Execution
-		assertEquals("Opaque behavior does not exist", "compute", interaction.getOwnedBehaviors().get(0)
-				.getName());
-		assertTrue(fragments.get(9) instanceof ExecutionOccurrenceSpecification);
-		assertEquals("compute_finish2", fragments.get(9).getName());
-		assertTrue(fragments.get(8) instanceof BehaviorExecutionSpecification);
-		assertEquals("compute", fragments.get(8).getName());
-		assertEquals(((BehaviorExecutionSpecification)fragments.get(8)).getStart(), fragments.get(7));
-		assertEquals(((BehaviorExecutionSpecification)fragments.get(8)).getFinish(), fragments.get(9));
-		assertNotNull(((BehaviorExecutionSpecification)fragments.get(8)).getCovered(source.getName()));
-		assertEquals(interaction.getOwnedBehaviors().get(0),
-				((BehaviorExecutionSpecification)fragments.get(8)).getBehavior());
+		// Message get
+		Message getMessage = interaction.getMessages().get(0);
+		assertEquals("Message does not exist", "get", getMessage.getName());
+		assertTrue(getSend instanceof MessageOccurrenceSpecification);
+		assertEquals("get_sender", getSend.getName());
+		assertTrue(getReceive instanceof MessageOccurrenceSpecification);
+		assertEquals("get_receiver", getReceive.getName());
+		assertEquals(getMessage.getSendEvent(), getSend);
+		assertEquals(getMessage.getReceiveEvent(), getReceive);
+		assertNotNull(((MessageOccurrenceSpecification)getSend).getCovered(source.getName()));
+		assertNotNull(((MessageOccurrenceSpecification)getReceive).getCovered(target.getName()));
+
+		// Execution get
+		Behavior getBehavior = interaction.getOwnedBehaviors().get(1);
+		assertEquals("Opaque behavior does not exist", "get", getBehavior.getName());
+		assertTrue(getReceive instanceof MessageOccurrenceSpecification);
+		assertEquals("get_receiver", getReceive.getName());
+		assertTrue(getReplySend instanceof MessageOccurrenceSpecification);
+		assertEquals("get_reply_sender", getReplySend.getName());
+		assertTrue(get instanceof BehaviorExecutionSpecification);
+		assertEquals("get", get.getName());
+		assertEquals(((BehaviorExecutionSpecification)get).getStart(), getReceive);
+		assertEquals(((BehaviorExecutionSpecification)get).getFinish(), getReplySend);
+		assertNotNull(((BehaviorExecutionSpecification)get).getCovered(target.getName()));
+		assertEquals(getBehavior, ((BehaviorExecutionSpecification)get).getBehavior());
+
+		// Reply message get
+		Message getReplyMessage = interaction.getMessages().get(1);
+		assertEquals("Message does not exist", "get_reply", getReplyMessage.getName());
+		assertTrue(getReplySend instanceof MessageOccurrenceSpecification);
+		assertEquals("get_reply_sender", getReplySend.getName());
+		assertTrue(getReplyReceive instanceof MessageOccurrenceSpecification);
+		assertEquals("get_reply_receiver", getReplyReceive.getName());
+		assertEquals(getReplyMessage.getSendEvent(), getReplySend);
+		assertEquals(getReplyMessage.getReceiveEvent(), getReplyReceive);
+		assertNotNull(((MessageOccurrenceSpecification)getReplySend).getCovered(target.getName()));
+		assertNotNull(((MessageOccurrenceSpecification)getReplyReceive).getCovered(source.getName()));
+
+		// Execution compute2
+		assertEquals("Opaque behavior does not exist", "compute", computeBehavior.getName());
+		assertTrue(computeFinish2 instanceof ExecutionOccurrenceSpecification);
+		assertEquals("compute_finish2", computeFinish2.getName());
+		assertTrue(compute2 instanceof BehaviorExecutionSpecification);
+		assertEquals("compute", compute2.getName());
+		assertEquals(((BehaviorExecutionSpecification)compute2).getStart(), getReplyReceive);
+		assertEquals(((BehaviorExecutionSpecification)compute2).getFinish(), computeFinish2);
+		assertNotNull(((BehaviorExecutionSpecification)compute2).getCovered(source.getName()));
+		assertEquals(computeBehavior, ((BehaviorExecutionSpecification)compute2).getBehavior());
 	}
 
 	/**
@@ -773,66 +818,76 @@ public class SequenceServiceTests extends TestCase {
 				execution.getStart(), execution.getStart());
 
 		List<InteractionFragment> fragments = interaction.getFragments();
-		assertEquals(10, fragments.size());
+		assertEquals(9, fragments.size());
+
+		InteractionFragment computeStart = fragments.get(0);
+		InteractionFragment compute = fragments.get(1);
+		InteractionFragment getSend = fragments.get(2);
+		InteractionFragment getReceive = fragments.get(3);
+		InteractionFragment get = fragments.get(4);
+		InteractionFragment getReplySend = fragments.get(5);
+		InteractionFragment getReplyReceive = fragments.get(6);
+		InteractionFragment compute2 = fragments.get(7);
+		InteractionFragment computeFinish2 = fragments.get(8);
+
 		// Execution compute
-		assertEquals("Opaque behavior does not exist", "compute", interaction.getOwnedBehaviors().get(0)
-				.getName());
-		assertTrue(fragments.get(0) instanceof ExecutionOccurrenceSpecification);
-		assertEquals("compute_start", fragments.get(0).getName());
-		assertTrue(fragments.get(5) instanceof ExecutionOccurrenceSpecification);
-		assertEquals("compute_finish", fragments.get(5).getName());
-		assertTrue(fragments.get(1) instanceof BehaviorExecutionSpecification);
-		assertEquals("compute", fragments.get(1).getName());
-		assertEquals(((BehaviorExecutionSpecification)fragments.get(1)).getStart(), fragments.get(0));
-		assertEquals(((BehaviorExecutionSpecification)fragments.get(1)).getFinish(), fragments.get(5));
-		assertNotNull(((BehaviorExecutionSpecification)fragments.get(1)).getCovered(source.getName()));
-		assertEquals(interaction.getOwnedBehaviors().get(0),
-				((BehaviorExecutionSpecification)fragments.get(1)).getBehavior());
+		Behavior computeBehavior = interaction.getOwnedBehaviors().get(0);
+		assertEquals("Opaque behavior does not exist", "compute", computeBehavior.getName());
+		assertTrue(computeStart instanceof ExecutionOccurrenceSpecification);
+		assertEquals("compute_start", computeStart.getName());
+		assertTrue(getSend instanceof MessageOccurrenceSpecification);
+		assertEquals("get_sender", getSend.getName());
+		assertTrue(compute instanceof BehaviorExecutionSpecification);
+		assertEquals("compute", compute.getName());
+		assertEquals(((BehaviorExecutionSpecification)compute).getStart(), computeStart);
+		assertEquals(((BehaviorExecutionSpecification)compute).getFinish(), getSend);
+		assertNotNull(((BehaviorExecutionSpecification)compute).getCovered(source.getName()));
+		assertEquals(computeBehavior, ((BehaviorExecutionSpecification)compute).getBehavior());
 
 		// Message get
-		assertEquals("Message does not exist", "get", interaction.getMessages().get(0).getName());
-		assertTrue(fragments.get(2) instanceof MessageOccurrenceSpecification);
-		assertEquals("get_sender", fragments.get(2).getName());
-		assertTrue(fragments.get(3) instanceof MessageOccurrenceSpecification);
-		assertEquals("get_receiver", fragments.get(3).getName());
-		assertEquals(((Message)interaction.getMessages().get(0)).getSendEvent(), fragments.get(2));
-		assertEquals(((Message)interaction.getMessages().get(0)).getReceiveEvent(), fragments.get(3));
-		assertNotNull(((MessageOccurrenceSpecification)fragments.get(2)).getCovered(source.getName()));
-		assertNotNull(((MessageOccurrenceSpecification)fragments.get(3)).getCovered(target.getName()));
+		Message getMessage = interaction.getMessages().get(0);
+		assertEquals("Message does not exist", "get", getMessage.getName());
+		assertTrue(getSend instanceof MessageOccurrenceSpecification);
+		assertEquals("get_sender", getSend.getName());
+		assertTrue(getReceive instanceof MessageOccurrenceSpecification);
+		assertEquals("get_receiver", getReceive.getName());
+		assertEquals(getMessage.getSendEvent(), getSend);
+		assertEquals(getMessage.getReceiveEvent(), getReceive);
+		assertNotNull(((MessageOccurrenceSpecification)getSend).getCovered(source.getName()));
+		assertNotNull(((MessageOccurrenceSpecification)getReceive).getCovered(target.getName()));
 
 		// Execution get
-		assertEquals("Opaque behavior does not exist", "get", interaction.getOwnedBehaviors().get(1)
-				.getName());
-		assertTrue(fragments.get(4) instanceof BehaviorExecutionSpecification);
-		assertEquals("get", fragments.get(4).getName());
-		assertEquals(((BehaviorExecutionSpecification)fragments.get(4)).getStart(), fragments.get(3));
-		assertEquals(((BehaviorExecutionSpecification)fragments.get(4)).getFinish(), fragments.get(6));
-		assertNotNull(((BehaviorExecutionSpecification)fragments.get(4)).getCovered(target.getName()));
-		assertEquals(interaction.getOwnedBehaviors().get(1),
-				((BehaviorExecutionSpecification)fragments.get(4)).getBehavior());
+		Behavior getBehavior = interaction.getOwnedBehaviors().get(1);
+		assertEquals("Opaque behavior does not exist", "get", getBehavior.getName());
+		assertTrue(get instanceof BehaviorExecutionSpecification);
+		assertEquals("get", get.getName());
+		assertEquals(((BehaviorExecutionSpecification)get).getStart(), getReceive);
+		assertEquals(((BehaviorExecutionSpecification)get).getFinish(), getReplySend);
+		assertNotNull(((BehaviorExecutionSpecification)get).getCovered(target.getName()));
+		assertEquals(getBehavior, ((BehaviorExecutionSpecification)get).getBehavior());
 
 		// Reply message get
-		assertEquals("Message does not exist", "get_reply", interaction.getMessages().get(1).getName());
-		assertTrue(fragments.get(6) instanceof MessageOccurrenceSpecification);
-		assertEquals("get_reply_sender", fragments.get(6).getName());
-		assertTrue(fragments.get(7) instanceof MessageOccurrenceSpecification);
-		assertEquals("get_reply_receiver", fragments.get(7).getName());
-		assertEquals(((Message)interaction.getMessages().get(1)).getSendEvent(), fragments.get(6));
-		assertEquals(((Message)interaction.getMessages().get(1)).getReceiveEvent(), fragments.get(7));
-		assertNotNull(((MessageOccurrenceSpecification)fragments.get(6)).getCovered(target.getName()));
-		assertNotNull(((MessageOccurrenceSpecification)fragments.get(7)).getCovered(source.getName()));
+		Message getReplyMessage = interaction.getMessages().get(1);
+		assertEquals("Message does not exist", "get_reply", getReplyMessage.getName());
+		assertTrue(getReplySend instanceof MessageOccurrenceSpecification);
+		assertEquals("get_reply_sender", getReplySend.getName());
+		assertTrue(getReplyReceive instanceof MessageOccurrenceSpecification);
+		assertEquals("get_reply_receiver", getReplyReceive.getName());
+		assertEquals(getReplyMessage.getSendEvent(), getReplySend);
+		assertEquals(getReplyMessage.getReceiveEvent(), getReplyReceive);
+		assertNotNull(((MessageOccurrenceSpecification)getReplySend).getCovered(target.getName()));
+		assertNotNull(((MessageOccurrenceSpecification)getReplyReceive).getCovered(source.getName()));
 
-		assertTrue(fragments.get(9) instanceof ExecutionOccurrenceSpecification);
-		assertEquals("compute_finish2", fragments.get(9).getName());
+		assertTrue(computeFinish2 instanceof ExecutionOccurrenceSpecification);
+		assertEquals("compute_finish2", computeFinish2.getName());
 
 		// Execution compute split
-		assertTrue(fragments.get(8) instanceof BehaviorExecutionSpecification);
-		assertEquals("compute", fragments.get(8).getName());
-		assertEquals(((BehaviorExecutionSpecification)fragments.get(8)).getStart(), fragments.get(7));
-		assertEquals(((BehaviorExecutionSpecification)fragments.get(8)).getFinish(), fragments.get(9));
-		assertNotNull(((BehaviorExecutionSpecification)fragments.get(8)).getCovered(source.getName()));
-		assertEquals(interaction.getOwnedBehaviors().get(0),
-				((BehaviorExecutionSpecification)fragments.get(8)).getBehavior());
+		assertTrue(compute2 instanceof BehaviorExecutionSpecification);
+		assertEquals("compute", compute2.getName());
+		assertEquals(((BehaviorExecutionSpecification)compute2).getStart(), getReplyReceive);
+		assertEquals(((BehaviorExecutionSpecification)compute2).getFinish(), computeFinish2);
+		assertNotNull(((BehaviorExecutionSpecification)compute2).getCovered(source.getName()));
+		assertEquals(computeBehavior, ((BehaviorExecutionSpecification)compute2).getBehavior());
 	}
 
 	/**
@@ -883,5 +938,137 @@ public class SequenceServiceTests extends TestCase {
 		assertNotNull(((BehaviorExecutionSpecification)fragments.get(2)).getCovered(target.getName()));
 		assertEquals(interaction.getOwnedBehaviors().get(0),
 				((BehaviorExecutionSpecification)fragments.get(2)).getBehavior());
+	}
+
+	/**
+	 * Test createSynchronousMessage service. Create a synchronous message between an existing execution and a
+	 * lifeline. An execution exists on the source which already defines an asynchronous message.
+	 * 
+	 * @throws Exception
+	 *             in case of error
+	 */
+	public void testImportSynchronousMessageOnExecution2() throws Exception {
+		// Interaction Scenario_8
+		Interaction interaction = getInteraction(RESOURCE_URI, "Scenario_8");
+		Lifeline source = interaction.getLifeline("consumers");
+		// SourceFragment compute execution
+		ExecutionSpecification execution = (ExecutionSpecification)interaction.getFragment("compute");
+		// TargetFragment producers lifeline
+		Lifeline target = interaction.getLifeline("producers");
+		// Operation produce
+		Operation operation = (Operation)target.getRepresents().getType().getOwnedElements().get(0);
+		// StratingEndPredecessor get_finish execution occurrence
+		// FinishindEnPredecessor get_finish execution occurrence
+		ExecutionSpecification execution2 = (ExecutionSpecification)interaction.getFragment("get");
+
+		sequenceServices.createSynchronousMessage(interaction, execution, target, operation,
+				execution2.getFinish(), execution2.getFinish());
+
+		List<InteractionFragment> fragments = interaction.getFragments();
+		assertEquals(13, fragments.size());
+
+		InteractionFragment computeStart = fragments.get(0);
+		InteractionFragment compute = fragments.get(1);
+		InteractionFragment getSend = fragments.get(2);
+		InteractionFragment getReceive = fragments.get(3);
+		InteractionFragment get = fragments.get(4);
+		InteractionFragment getFinish = fragments.get(5);
+		InteractionFragment produceSend = fragments.get(6);
+		InteractionFragment produceReceive = fragments.get(7);
+		InteractionFragment produce = fragments.get(8);
+		InteractionFragment produceReplySend = fragments.get(9);
+		InteractionFragment produceReplyReceive = fragments.get(10);
+		InteractionFragment compute2 = fragments.get(11);
+		InteractionFragment computeFinish2 = fragments.get(12);
+
+		// Execution compute
+		Behavior computeBehavior = interaction.getOwnedBehaviors().get(0);
+		assertEquals("Opaque behavior does not exist", "compute", computeBehavior.getName());
+		assertTrue(computeStart instanceof ExecutionOccurrenceSpecification);
+		assertEquals("compute_start", computeStart.getName());
+		assertTrue(produceSend instanceof MessageOccurrenceSpecification);
+		assertEquals("produce_sender", produceSend.getName());
+		assertTrue(compute instanceof BehaviorExecutionSpecification);
+		assertEquals("compute", compute.getName());
+		assertEquals(((BehaviorExecutionSpecification)compute).getStart(), computeStart);
+		assertEquals(((BehaviorExecutionSpecification)compute).getFinish(), produceSend);
+		assertNotNull(((BehaviorExecutionSpecification)compute).getCovered(source.getName()));
+		assertEquals(computeBehavior, ((BehaviorExecutionSpecification)compute).getBehavior());
+
+		// Asynchronous message get
+		Message messageGet = interaction.getMessages().get(0);
+		assertEquals("Message does not exist", "get", messageGet.getName());
+		assertTrue(getSend instanceof MessageOccurrenceSpecification);
+		assertEquals("get_sender", getSend.getName());
+		assertTrue(getReceive instanceof MessageOccurrenceSpecification);
+		assertEquals("get_receiver", getReceive.getName());
+		assertEquals(messageGet.getSendEvent(), getSend);
+		assertEquals(messageGet.getReceiveEvent(), getReceive);
+		assertNotNull(((MessageOccurrenceSpecification)getSend).getCovered(source.getName()));
+		assertNotNull(((MessageOccurrenceSpecification)getReceive).getCovered(target.getName()));
+
+		// Execution get
+		Behavior getBehavior = interaction.getOwnedBehaviors().get(1);
+		assertEquals("Opaque behavior does not exist", "get", getBehavior.getName());
+		assertTrue(getReceive instanceof MessageOccurrenceSpecification);
+		assertEquals("get_receiver", getReceive.getName());
+		assertTrue(getFinish instanceof ExecutionOccurrenceSpecification);
+		assertEquals("get_finish", getFinish.getName());
+		assertTrue(get instanceof BehaviorExecutionSpecification);
+		assertEquals("get", get.getName());
+		assertEquals(((BehaviorExecutionSpecification)get).getStart(), getReceive);
+		assertEquals(((BehaviorExecutionSpecification)get).getFinish(), getFinish);
+		assertNotNull(((BehaviorExecutionSpecification)get).getCovered(target.getName()));
+		assertEquals(getBehavior, ((BehaviorExecutionSpecification)get).getBehavior());
+
+		// Synchronous message produce
+		Message messageProduce = interaction.getMessages().get(1);
+		assertEquals("Message does not exist", "produce", messageProduce.getName());
+		assertTrue(produceSend instanceof MessageOccurrenceSpecification);
+		assertEquals("produce_sender", produceSend.getName());
+		assertTrue(produceReceive instanceof MessageOccurrenceSpecification);
+		assertEquals("produce_receiver", produceReceive.getName());
+		assertEquals(messageProduce.getSendEvent(), produceSend);
+		assertEquals(messageProduce.getReceiveEvent(), produceReceive);
+		assertNotNull(((MessageOccurrenceSpecification)produceSend).getCovered(source.getName()));
+		assertNotNull(((MessageOccurrenceSpecification)produceReceive).getCovered(target.getName()));
+
+		// Execution produce
+		Behavior produceBehavior = interaction.getOwnedBehaviors().get(2);
+		assertEquals("Opaque behavior does not exist", "produce", produceBehavior.getName());
+		assertTrue(produceReceive instanceof MessageOccurrenceSpecification);
+		assertEquals("produce_receiver", produceReceive.getName());
+		assertTrue(produceReplySend instanceof MessageOccurrenceSpecification);
+		assertEquals("produce_reply_sender", produceReplySend.getName());
+		assertTrue(produce instanceof BehaviorExecutionSpecification);
+		assertEquals("produce", produce.getName());
+		assertEquals(((BehaviorExecutionSpecification)produce).getStart(), produceReceive);
+		assertEquals(((BehaviorExecutionSpecification)produce).getFinish(), produceReplySend);
+		assertNotNull(((BehaviorExecutionSpecification)produce).getCovered(target.getName()));
+		assertEquals(produceBehavior, ((BehaviorExecutionSpecification)produce).getBehavior());
+
+		// Synchronous message reply produce
+		Message messageReplyProduce = interaction.getMessages().get(2);
+		assertEquals("Message does not exist", "produce_reply", messageReplyProduce.getName());
+		assertTrue(produceReplySend instanceof MessageOccurrenceSpecification);
+		assertEquals("produce_reply_sender", produceReplySend.getName());
+		assertTrue(produceReplyReceive instanceof MessageOccurrenceSpecification);
+		assertEquals("produce_reply_receiver", produceReplyReceive.getName());
+		assertEquals(messageReplyProduce.getSendEvent(), produceReplySend);
+		assertEquals(messageReplyProduce.getReceiveEvent(), produceReplyReceive);
+		assertNotNull(((MessageOccurrenceSpecification)produceReplySend).getCovered(target.getName()));
+		assertNotNull(((MessageOccurrenceSpecification)produceReplyReceive).getCovered(source.getName()));
+
+		// Execution compute2
+		assertTrue(produceReplyReceive instanceof MessageOccurrenceSpecification);
+		assertEquals("produce_reply_receiver", produceReplyReceive.getName());
+		assertTrue(computeFinish2 instanceof ExecutionOccurrenceSpecification);
+		assertEquals("compute_finish2", computeFinish2.getName());
+		assertTrue(compute2 instanceof BehaviorExecutionSpecification);
+		assertEquals("compute", compute.getName());
+		assertEquals(((BehaviorExecutionSpecification)compute2).getStart(), produceReplyReceive);
+		assertEquals(((BehaviorExecutionSpecification)compute2).getFinish(), computeFinish2);
+		assertNotNull(((BehaviorExecutionSpecification)compute2).getCovered(source.getName()));
+		assertEquals(computeBehavior, ((BehaviorExecutionSpecification)compute2).getBehavior());
 	}
 }
