@@ -19,9 +19,9 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.uml2.uml.Interaction;
 import org.eclipse.uml2.uml.Package;
-import org.eclipse.uml2.uml.PackageableElement;
 import org.eclipse.uml2.uml.UMLFactory;
 import org.obeonetwork.dsl.uml2.design.UMLDesignerPlugin;
+import org.obeonetwork.dsl.uml2.design.services.internal.InteractionServices;
 
 import fr.obeo.dsl.common.ui.tools.api.editing.EditingDomainService;
 import fr.obeo.dsl.viewpoint.business.api.session.Session;
@@ -89,21 +89,11 @@ public class CreateScenarioAction extends Action {
 						session = SessionManager.INSTANCE.getSession(pkg);
 					}
 					Interaction interaction = UMLFactory.eINSTANCE.createInteraction();
-					interaction.setName("Scenario_" + getNumberOfInteractions(pkg));
+					interaction.setName(InteractionServices.getNewInteractionName(pkg));
 					pkg.getPackagedElements().add(interaction);
 				}
 			}
 		};
 		editingDomain.getCommandStack().execute(cmd);
-	}
-
-	private int getNumberOfInteractions(Package pkg) {
-		int numberOfInteraction = 0;
-		for (PackageableElement element : pkg.getPackagedElements()) {
-			if (element instanceof Interaction) {
-				numberOfInteraction++;
-			}
-		}
-		return numberOfInteraction;
 	}
 }

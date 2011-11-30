@@ -36,7 +36,9 @@ import org.eclipse.uml2.uml.NamedElement;
 import org.eclipse.uml2.uml.OccurrenceSpecification;
 import org.eclipse.uml2.uml.OpaqueBehavior;
 import org.eclipse.uml2.uml.Operation;
+import org.eclipse.uml2.uml.Package;
 import org.eclipse.uml2.uml.UMLFactory;
+import org.obeonetwork.dsl.uml2.design.services.internal.InteractionServices;
 
 import fr.obeo.dsl.viewpoint.DDiagram;
 import fr.obeo.dsl.viewpoint.DEdge;
@@ -782,5 +784,18 @@ public class SequenceServices {
 		}
 
 		return operations;
+	}
+
+	/**
+	 * Create interaction a new interaction in package.
+	 * 
+	 * @param pkg
+	 *            Package containing new interaction.
+	 */
+	public void createInteraction(EObject pkg) {
+		UMLFactory factory = UMLFactory.eINSTANCE;
+		Interaction interaction = factory.createInteraction();
+		interaction.setName(InteractionServices.getNewInteractionName((Package)pkg));
+		((Package)pkg).getPackagedElements().add(interaction);
 	}
 }
