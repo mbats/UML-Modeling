@@ -731,17 +731,11 @@ public class SequenceServices {
 			splitSourceExec.getCovereds().add(source);
 			splitSourceExec.setBehavior(((BehaviorExecutionSpecification)sourceFragment).getBehavior());
 
-			// Create split execution end occurrence
-			ExecutionOccurrenceSpecification endSplitSourceExec = factory
-					.createExecutionOccurrenceSpecification();
-			endSplitSourceExec.setName(sourceFragment.getName() + "_finish2");
-
 			// Set split source execution start to reply message receiver
 			splitSourceExec.setStart(receiverEventReplyMessage);
-			splitSourceExec.setFinish(endSplitSourceExec);
-
-			// Remove old end
-			fragments.remove(((BehaviorExecutionSpecification)sourceFragment).getFinish());
+			OccurrenceSpecification sourceExecFinish = (OccurrenceSpecification)((BehaviorExecutionSpecification)sourceFragment)
+					.getFinish();
+			splitSourceExec.setFinish(sourceExecFinish);
 
 			// Set new end
 			((BehaviorExecutionSpecification)sourceFragment).setFinish(senderEventMessage);
@@ -749,8 +743,7 @@ public class SequenceServices {
 			// Add new split execution and split execution end
 			fragments.add(splitSourceExec);
 			fragments.move(fragments.indexOf(receiverEventReplyMessage) + 1, splitSourceExec);
-			fragments.add(endSplitSourceExec);
-			fragments.move(fragments.indexOf(splitSourceExec) + 1, endSplitSourceExec);
+			fragments.move(fragments.indexOf(splitSourceExec) + 1, sourceExecFinish);
 		}
 	}
 
